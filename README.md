@@ -4,7 +4,7 @@
 ![build](https://github.com/0x9dhcf/agt/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
 
-Provider-agnostic C++ library for building LLM-powered agents. Supports OpenAI, Anthropic, and Gemini with tool calling, MCP integration, streaming, and persistent session management.
+Provider-agnostic C++ library for building LLM-powered agents. Supports OpenAI, Anthropic, Gemini, and Mistral with tool calling, MCP integration, streaming, and persistent session management.
 
 ## Dependencies
 
