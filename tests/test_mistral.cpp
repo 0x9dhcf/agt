@@ -5,7 +5,7 @@ using json = nlohmann::json;
 
 TEST_SUITE("llm_mistral") {
 
-static agt::llm_mistral make() { return agt::llm_mistral("mistral-large-latest", "fake-key"); }
+static agt::llm_mistral make() { return agt::llm_mistral("mistral-large-latest", "fake-key", false); }
 
 // ── build_request ─────────────────────────────────────────────
 

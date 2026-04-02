@@ -129,7 +129,7 @@ Json llm_gemini::build_request(const Json &input) const {
   Json gc;
   if (input.contains("max_tokens"))
     gc["maxOutputTokens"] = input["max_tokens"];
-  if (input.contains("thinking_effort")) {
+  if (supports_thinking_ && input.contains("thinking_effort")) {
     auto effort = input["thinking_effort"].get<std::string>();
     auto level = (effort == "none") ? "minimal" : effort;
     gc["thinkingConfig"] = {{"thinkingLevel", level}};

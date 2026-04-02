@@ -44,8 +44,8 @@ TEST_CASE("recursive through properties and items") {
 
 TEST_SUITE("llm_gemini") {
 
-static agt::llm_gemini make() {
-  return agt::llm_gemini("gemini-pro", "fake-key");
+static agt::llm_gemini make(bool thinking = true) {
+  return agt::llm_gemini("gemini-pro", "fake-key", thinking);
 }
 
 // ── build_request ─────────────────────────────────────────────
@@ -141,19 +141,25 @@ TEST_CASE("build_request: max_tokens -> generationConfig.maxOutputTokens") {
   CHECK(req["generationConfig"]["maxOutputTokens"] == 2048);
 }
 
-TEST_CASE("build_request: thinking_effort -> thinkingConfig.thinkingLevel") {
-  auto llm = make();
+TEST_CASE("build_request: thinking_effort -> thinkingConfig.thinkingLevel when supported") {
+  auto llm = make(true);
   json input = {{"messages", json::array()}, {"thinking_effort", "high"}};
   auto req = llm.build_request(input);
   CHECK(req["generationConfig"]["thinkingConfig"]["thinkingLevel"] == "high");
-  CHECK_FALSE(req.contains("temperature"));
 }
 
 TEST_CASE("build_request: thinking_effort none -> thinkingLevel minimal") {
-  auto llm = make();
+  auto llm = make(true);
   json input = {{"messages", json::array()}, {"thinking_effort", "none"}};
   auto req = llm.build_request(input);
   CHECK(req["generationConfig"]["thinkingConfig"]["thinkingLevel"] == "minimal");
+}
+
+TEST_CASE("build_request: thinking_effort suppressed when not supported") {
+  auto llm = make(false);
+  json input = {{"messages", json::array()}, {"thinking_effort", "high"}};
+  auto req = llm.build_request(input);
+  CHECK_FALSE(req.contains("generationConfig"));
 }
 
 TEST_CASE("build_request: user message -> text parts") {

@@ -62,7 +62,7 @@ Json llm_openai::build_request(const Json &input) const {
 
   if (input.contains("max_tokens"))
     out["max_completion_tokens"] = input["max_tokens"];
-  if (input.contains("thinking_effort"))
+  if (supports_thinking_ && input.contains("thinking_effort"))
     out["reasoning_effort"] = input["thinking_effort"];
 
   return out;

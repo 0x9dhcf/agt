@@ -23,9 +23,15 @@ const char* provider_to_string(Provider provider) noexcept;
 /// Returns the provider from a name (throw if not found).
 Provider provider_from_string(const std::string& string);
 
+/// Per-model metadata for curated model lists.
+struct ModelInfo {
+  std::string id;
+  bool supports_thinking = false;
+};
+
 struct ProviderConfig {
   std::string key;
-  std::vector<std::string> models;
+  std::vector<ModelInfo> models;
 };
 
 /// Returns environment config from environment variables.
@@ -36,8 +42,12 @@ inline bool is_experimental(Provider provider) noexcept {
   return provider == Provider::gemini;
 }
 
-/// Returns a curated list of model IDs known to work well with the canonical schema.
-std::vector<std::string> curated_models(Provider provider);
+/// Returns a curated list of models known to work well with the canonical schema.
+std::vector<ModelInfo> curated_models(Provider provider);
+
+/// Returns true if the given model supports extended thinking for its provider.
+/// Returns false for unknown models.
+bool model_supports_thinking(Provider provider, const std::string& model);
 
 class LlmImpl;
 

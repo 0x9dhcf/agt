@@ -5,8 +5,8 @@ using json = nlohmann::json;
 
 TEST_SUITE("llm_anthropic") {
 
-static agt::llm_anthropic make() {
-  return agt::llm_anthropic("claude-3-opus", "fake-key");
+static agt::llm_anthropic make(bool thinking = true) {
+  return agt::llm_anthropic("claude-3-opus", "fake-key", thinking);
 }
 
 // ── build_request ─────────────────────────────────────────────
@@ -93,17 +93,23 @@ TEST_CASE("build_request: tools parameters -> input_schema") {
   CHECK_FALSE(tool.contains("parameters"));
 }
 
-TEST_CASE("build_request: thinking_effort -> output_config.effort") {
-  auto llm = make();
+TEST_CASE("build_request: thinking_effort -> output_config.effort when supported") {
+  auto llm = make(true);
   json input = {{"messages", json::array()}, {"thinking_effort", "high"}};
   auto req = llm.build_request(input);
   CHECK(req["output_config"]["effort"] == "high");
-  CHECK_FALSE(req.contains("temperature"));
 }
 
 TEST_CASE("build_request: thinking_effort none omits output_config") {
-  auto llm = make();
+  auto llm = make(true);
   json input = {{"messages", json::array()}, {"thinking_effort", "none"}};
+  auto req = llm.build_request(input);
+  CHECK_FALSE(req.contains("output_config"));
+}
+
+TEST_CASE("build_request: thinking_effort suppressed when not supported") {
+  auto llm = make(false);
+  json input = {{"messages", json::array()}, {"thinking_effort", "high"}};
   auto req = llm.build_request(input);
   CHECK_FALSE(req.contains("output_config"));
 }

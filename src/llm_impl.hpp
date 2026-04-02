@@ -17,6 +17,7 @@ class LlmImpl {
 protected:
   std::string model_;
   std::string key_;
+  bool supports_thinking_;
   Http http_;
 
 public:
@@ -35,7 +36,8 @@ public:
   virtual std::string parse_stream_event(const std::string& event, const std::string& data,
                                          Json& accum) const = 0;
 
-  LlmImpl(const std::string& model, const std::string& key) : model_(model), key_(key) {}
+  LlmImpl(const std::string& model, const std::string& key, bool supports_thinking = false)
+      : model_(model), key_(key), supports_thinking_(supports_thinking) {}
   virtual ~LlmImpl() noexcept = default;
 
   Json complete(const Json& input, on_token_cb on_token = nullptr) {

@@ -62,18 +62,28 @@ Provider provider_from_string(const std::string& s) {
   throw std::runtime_error("unknown provider " + s);
 }
 
-std::vector<std::string> curated_models(Provider p) {
+std::vector<ModelInfo> curated_models(Provider p) {
   switch (p) {
   case Provider::openai:
-    return {"gpt-5-nano", "gpt-5-mini", "gpt-5", "gpt-5.1", "gpt-5.2", "o3", "o4-mini"};
+    return {{"gpt-5-nano"}, {"gpt-5-mini"}, {"gpt-5"}, {"gpt-5.1"}, {"gpt-5.2"},
+            {"o3", true}, {"o4-mini", true}};
   case Provider::anthropic:
-    return {"claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-6"};
+    return {{"claude-haiku-4-5-20251001", true},
+            {"claude-sonnet-4-6", true},
+            {"claude-opus-4-6", true}};
   case Provider::gemini:
-    return {"gemini-2.5-flash", "gemini-2.5-pro"};
+    return {{"gemini-2.5-flash", true}, {"gemini-2.5-pro", true}};
   case Provider::mistral:
-    return {"mistral-small-latest", "mistral-medium-latest", "mistral-large-latest"};
+    return {{"mistral-small-latest"}, {"mistral-medium-latest"}, {"mistral-large-latest"}};
   }
   return {};
+}
+
+bool model_supports_thinking(Provider p, const std::string& model) {
+  for (const auto& m : curated_models(p))
+    if (m.id == model)
+      return m.supports_thinking;
+  return false;
 }
 
 std::unordered_map<agt::Provider, ProviderConfig> load_providers_from_env() {
@@ -92,18 +102,19 @@ static nlohmann::json_schema::json_validator& input_validator() {
 }
 
 Llm::Llm(Provider p, const std::string& model, const std::string& key) {
+  bool thinking = model_supports_thinking(p, model);
   switch (p) {
   case Provider::openai:
-    llm_ = std::make_unique<llm_openai>(model, key);
+    llm_ = std::make_unique<llm_openai>(model, key, thinking);
     break;
   case Provider::anthropic:
-    llm_ = std::make_unique<llm_anthropic>(model, key);
+    llm_ = std::make_unique<llm_anthropic>(model, key, thinking);
     break;
   case Provider::gemini:
-    llm_ = std::make_unique<llm_gemini>(model, key);
+    llm_ = std::make_unique<llm_gemini>(model, key, thinking);
     break;
   case Provider::mistral:
-    llm_ = std::make_unique<llm_mistral>(model, key);
+    llm_ = std::make_unique<llm_mistral>(model, key, thinking);
     break;
   }
 }

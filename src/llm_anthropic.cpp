@@ -19,7 +19,8 @@ Json llm_anthropic::build_request(const Json& input) const {
 
   if (input.contains("system"))
     out["system"] = input["system"];
-  if (input.contains("thinking_effort") && input["thinking_effort"].get<std::string>() != "none")
+  if (supports_thinking_ && input.contains("thinking_effort") &&
+      input["thinking_effort"].get<std::string>() != "none")
     out["output_config"] = {{"effort", input["thinking_effort"]}};
 
   Json msgs = Json::array();

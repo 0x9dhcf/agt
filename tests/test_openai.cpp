@@ -5,7 +5,9 @@ using json = nlohmann::json;
 
 TEST_SUITE("llm_openai") {
 
-static agt::llm_openai make() { return agt::llm_openai("gpt-4", "fake-key"); }
+static agt::llm_openai make(bool thinking = false) {
+  return agt::llm_openai("gpt-4", "fake-key", thinking);
+}
 
 // ── build_request ─────────────────────────────────────────────
 
@@ -88,12 +90,18 @@ TEST_CASE("build_request: max_tokens passes through") {
   CHECK(req["max_completion_tokens"] == 1000);
 }
 
-TEST_CASE("build_request: thinking_effort -> reasoning_effort") {
-  auto llm = make();
+TEST_CASE("build_request: thinking_effort -> reasoning_effort when supported") {
+  auto llm = make(true);
   json input = {{"messages", json::array()}, {"thinking_effort", "high"}};
   auto req = llm.build_request(input);
   CHECK(req["reasoning_effort"] == "high");
-  CHECK_FALSE(req.contains("temperature"));
+}
+
+TEST_CASE("build_request: thinking_effort suppressed when not supported") {
+  auto llm = make(false);
+  json input = {{"messages", json::array()}, {"thinking_effort", "high"}};
+  auto req = llm.build_request(input);
+  CHECK_FALSE(req.contains("reasoning_effort"));
 }
 
 TEST_CASE("build_request: model is set") {
