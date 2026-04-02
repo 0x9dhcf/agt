@@ -11,6 +11,7 @@ static const char *provider_env_key(agt::Provider p) noexcept {
   case agt::Provider::openai:    return "OPENAI_API_KEY";
   case agt::Provider::anthropic: return "ANTHROPIC_API_KEY";
   case agt::Provider::gemini:    return "GEMINI_API_KEY";
+  case agt::Provider::mistral:   return "MISTRAL_API_KEY";
   }
   return "unknown";
 }

@@ -20,6 +20,8 @@ static const char *default_model(agt::Provider p) {
     return "claude-sonnet-4-20250514";
   case agt::Provider::gemini:
     return "gemini-2.5-flash";
+  case agt::Provider::mistral:
+    return "mistral-small-latest";
   }
   return "";
 }

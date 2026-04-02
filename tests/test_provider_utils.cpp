@@ -15,6 +15,7 @@ TEST_CASE("provider_from_string for valid strings") {
   CHECK(agt::provider_from_string("openai") == agt::Provider::openai);
   CHECK(agt::provider_from_string("anthropic") == agt::Provider::anthropic);
   CHECK(agt::provider_from_string("gemini") == agt::Provider::gemini);
+  CHECK(agt::provider_from_string("mistral") == agt::Provider::mistral);
 }
 
 TEST_CASE("provider_from_string throws on unknown") {

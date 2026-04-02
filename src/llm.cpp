@@ -1,6 +1,7 @@
 #include "http.hpp"
 #include "llm_anthropic.hpp"
 #include "llm_gemini.hpp"
+#include "llm_mistral.hpp"
 #include "llm_openai.hpp"
 #include "llm_schemas.hpp"
 #include <agt/llm.hpp>
@@ -29,6 +30,8 @@ static const char* provider_environment_key(Provider p) noexcept {
     return "ANTHROPIC_API_KEY";
   case agt::Provider::gemini:
     return "GEMINI_API_KEY";
+  case agt::Provider::mistral:
+    return "MISTRAL_API_KEY";
   }
   return "unknown";
 }
@@ -41,6 +44,8 @@ const char* provider_to_string(Provider p) noexcept {
     return "anthropic";
   case Provider::gemini:
     return "gemini";
+  case Provider::mistral:
+    return "mistral";
   }
   return "unknown";
 }
@@ -52,6 +57,8 @@ Provider provider_from_string(const std::string& s) {
     return Provider::anthropic;
   if ("gemini" == s)
     return Provider::gemini;
+  if ("mistral" == s)
+    return Provider::mistral;
   throw std::runtime_error("unknown provider " + s);
 }
 
@@ -63,6 +70,8 @@ std::vector<std::string> curated_models(Provider p) {
     return {"claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-6"};
   case Provider::gemini:
     return {"gemini-2.5-flash", "gemini-2.5-pro"};
+  case Provider::mistral:
+    return {"mistral-small-latest", "mistral-medium-latest", "mistral-large-latest"};
   }
   return {};
 }
@@ -92,6 +101,9 @@ Llm::Llm(Provider p, const std::string& model, const std::string& key) {
     break;
   case Provider::gemini:
     llm_ = std::make_unique<llm_gemini>(model, key);
+    break;
+  case Provider::mistral:
+    llm_ = std::make_unique<llm_mistral>(model, key);
     break;
   }
 }

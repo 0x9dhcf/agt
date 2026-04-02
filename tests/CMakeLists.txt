@@ -18,6 +18,7 @@ add_executable(test_internals
   test_openai.cpp
   test_anthropic.cpp
   test_gemini.cpp
+  test_mistral.cpp
   test_runner.cpp
   ${PROJECT_SOURCE_DIR}/src/session.cpp
 )

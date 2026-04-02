@@ -11,10 +11,11 @@
 namespace agt {
 
 /// Supported LLM providers.
-enum class Provider : std::uint8_t { openai, anthropic, gemini };
+enum class Provider : std::uint8_t { openai, anthropic, gemini, mistral };
 
 /// Iterable list of all providers.
-inline constexpr std::array providers = {Provider::openai, Provider::anthropic, Provider::gemini};
+inline constexpr std::array providers = {Provider::openai, Provider::anthropic, Provider::gemini,
+                                         Provider::mistral};
 
 /// Returns the provider name as a C string (e.g. "openai").
 const char* provider_to_string(Provider provider) noexcept;
