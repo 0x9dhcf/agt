@@ -81,7 +81,7 @@ target_link_libraries(myapp PRIVATE agt::agt)
 Or fetch directly with CPM:
 
 ```cmake
-CPMAddPackage("gh:0x9dhcf/agt@0.1.0")
+CPMAddPackage("gh:0x9dhcf/agt@main")
 target_link_libraries(myapp PRIVATE agt::agt)
 ```
 
