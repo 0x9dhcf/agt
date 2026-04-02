@@ -6,10 +6,6 @@
 
 Provider-agnostic C++ library for building LLM-powered agents. Supports OpenAI, Anthropic, and Gemini with tool calling, MCP integration, streaming, and persistent session management.
 
-## Why C++?
-
-Most agentic frameworks are Python-first and treat orchestration overhead as negligible. This library is for use cases where it isn't -- inference servers, embedded agents, latency-sensitive pipelines, or systems where you simply can't afford a Python runtime. The API is intentionally minimal: no async runtime, no framework lock-in, just a loop you can reason about.
-
 ## Dependencies
 
 - C++23 compiler
