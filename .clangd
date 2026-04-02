@@ -1,14 +1,4 @@
 CompileFlags:
-  CompilationDatabase: ./
-
----
-If:
-  PathMatch: .*\.h
-CompileFlags:
-  Add: [-xc]
-
----
-If:
-  PathMatch: .*\.hpp
-CompileFlags:
-  Add: [-xc++, -std=c++17]
+  CompilationDatabase: build/debug
+Diagnostics:
+  UnusedIncludes: Strict

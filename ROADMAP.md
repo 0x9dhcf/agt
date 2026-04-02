@@ -27,12 +27,12 @@
 
 - [ ] Guardrails (input/output/tool validation and safety checks)
 - [ ] Human-in-the-loop (pause/resume for tool approval workflows)
-- [ ] Persistent sessions (SQLite-backed durable conversation storage)
-- [ ] Context window management (compaction/trimming for long conversations)
+- [X] Persistent sessions (SQLite-backed durable conversation storage)
+- [X] Context window management (compaction/trimming for long conversations)
 
 ## v0.5 - Advanced
 
-- [ ] Async execution (concurrent tool calls and parallel agents)
+- [X] Async execution (concurrent tool calls and parallel agents)
 - [ ] Built-in tools (web search, file operations, code execution)
-- [ ] Extended thinking (Anthropic reasoning mode support)
+- [X] Extended thinking (Anthropic reasoning mode support)
 - [ ] Evaluation framework (systematic agent testing and benchmarking)
