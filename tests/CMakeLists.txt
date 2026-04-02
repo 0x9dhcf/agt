@@ -1,4 +1,8 @@
-CPMAddPackage("gh:doctest/doctest@2.4.11")
+CPMAddPackage(
+  NAME doctest
+  VERSION 2.4.11
+  URL https://github.com/doctest/doctest/archive/refs/tags/v2.4.11.tar.gz
+)
 
 # --- test_public ---
 add_executable(test_public
