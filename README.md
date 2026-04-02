@@ -1,7 +1,7 @@
 # agt
 
 ![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)
-![build](https://github.com/hcf/agt/actions/workflows/ci.yml/badge.svg)
+![build](https://github.com/0x9dhcf/agt/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
 
 Provider-agnostic C++ library for building LLM-powered agents. Supports OpenAI, Anthropic, and Gemini with tool calling, MCP integration, streaming, and persistent session management.
@@ -73,7 +73,7 @@ target_link_libraries(myapp PRIVATE agt::agt)
 Or fetch directly with CPM:
 
 ```cmake
-CPMAddPackage("gh:hcf/agt@0.1.0")
+CPMAddPackage("gh:0x9dhcf/agt@0.1.0")
 target_link_libraries(myapp PRIVATE agt::agt)
 ```
 
