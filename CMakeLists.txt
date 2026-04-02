@@ -19,12 +19,15 @@ option(AGT_BUILD_EXAMPLES "Build examples" ${_agt_toplevel})
 # --- CPM dependencies ---
 include(cmake/CPM.cmake)
 
-CPMAddPackage("gh:nlohmann/json@3.11.3")
-set(nlohmann_json_VERSION 3.11.3)
+CPMAddPackage(
+  NAME nlohmann_json
+  VERSION 3.11.3
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
 CPMAddPackage(
   NAME nlohmann_json_schema_validator
-  GITHUB_REPOSITORY pboettch/json-schema-validator
-  GIT_TAG 2.4.0
+  VERSION 2.4.0
+  URL https://github.com/pboettch/json-schema-validator/archive/refs/tags/2.4.0.tar.gz
   OPTIONS
     "JSON_VALIDATOR_INSTALL OFF"
     "JSON_VALIDATOR_BUILD_TESTS OFF"
