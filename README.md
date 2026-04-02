@@ -6,6 +6,18 @@
 
 Provider-agnostic C++ library for building LLM-powered agents. Supports OpenAI, Anthropic, Gemini, and Mistral with tool calling, MCP integration, streaming, and persistent session management.
 
+## Why agt
+
+agt grew out of [chatty](https://github.com/0x9dhcf/chatty), a personal
+terminal assistant built for daily use. Building chatty required a lightweight
+agentic loop with tool calling, persistent sessions, and MCP support — with
+no heavy runtime dependencies and no Python in the stack. agt is the library
+that came out of that need.
+
+It is intentionally minimal: the API is straightforward, the loop is easy to
+follow, and it fits naturally into any C++ project that wants to add LLM-powered
+agent capabilities without pulling in a large framework.
+
 ## Dependencies
 
 - C++23 compiler
@@ -227,11 +239,6 @@ See the [`examples/`](examples/) directory:
 ## Status
 
 This project is in active early development. The v0.1 foundation (multi-provider LLM, tool calling, MCP, sessions) is complete. Current focus areas:
-
-- **v0.2** -- Tracing and structured event emission
-- **v0.3** -- Multi-agent orchestration, structured output, dynamic instructions
-- **v0.4** -- Guardrails, human-in-the-loop
-- **v0.5** -- Built-in tools, evaluation framework
 
 See [ROADMAP.md](ROADMAP.md) for the full plan.
 
