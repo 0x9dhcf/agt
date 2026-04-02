@@ -24,6 +24,7 @@ CPMAddPackage(
   VERSION 3.11.3
   URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
 )
+set(nlohmann_json_VERSION 3.11.3)
 CPMAddPackage(
   NAME nlohmann_json_schema_validator
   VERSION 2.4.0
