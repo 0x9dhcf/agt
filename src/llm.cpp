@@ -68,7 +68,7 @@ std::vector<ModelInfo> curated_models(Provider p) {
     return {{"gpt-5-nano"}, {"gpt-5-mini"}, {"gpt-5"}, {"gpt-5.1"}, {"gpt-5.2"},
             {"o3", true}, {"o4-mini", true}};
   case Provider::anthropic:
-    return {{"claude-haiku-4-5-20251001", true},
+    return {{"claude-haiku-4-5-20251001"},
             {"claude-sonnet-4-6", true},
             {"claude-opus-4-6", true}};
   case Provider::gemini:

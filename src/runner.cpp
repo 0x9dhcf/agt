@@ -52,7 +52,7 @@ static Json build_request(const Agent& a, const RunnerOptions& opts, const std::
 
 static void append_assistant_message(Json& messages, const Json& resp) {
   Json msg = {{"role", "assistant"}, {"content", resp["content"]}};
-  if (resp.contains("calls"))
+  if (resp.contains("calls") && resp["calls"].is_array() && !resp["calls"].empty())
     msg["calls"] = resp["calls"];
   messages.push_back(std::move(msg));
 }
