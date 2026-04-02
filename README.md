@@ -10,8 +10,8 @@ Provider-agnostic C++ library for building LLM-powered agents. Supports OpenAI, 
 
 agt grew out of [chatty](https://github.com/0x9dhcf/chatty), a personal
 terminal assistant built for daily use. Building chatty required a lightweight
-agentic loop with tool calling, persistent sessions, and MCP support — with
-no heavy runtime dependencies and no Python in the stack. agt is the library
+agentic loop with tool calling, persistent sessions, and MCP support,
+without heavy runtime dependencies or Python in the stack. agt is the library
 that came out of that need.
 
 It is intentionally minimal: the API is straightforward, the loop is easy to
