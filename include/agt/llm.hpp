@@ -11,17 +11,46 @@
 namespace agt {
 
 /// Supported LLM providers.
-enum class Provider : std::uint8_t { openai, anthropic, gemini, mistral };
+enum class Provider : std::uint8_t { openai, anthropic, gemini, mistral, unknown };
 
 /// Iterable list of all providers.
 inline constexpr std::array providers = {Provider::openai, Provider::anthropic, Provider::gemini,
                                          Provider::mistral};
 
 /// Returns the provider name as a C string (e.g. "openai").
-const char* provider_to_string(Provider provider) noexcept;
+// const char* provider_to_string(Provider provider) noexcept;
 
 /// Returns the provider from a name (throw if not found).
-Provider provider_from_string(const std::string& string);
+// Provider provider_from_string(const std::string& string);
+
+/// Returns the provider name as a C string (e.g. "openai").
+[[nodiscard]] inline Provider provider_from_string(std::string_view s) noexcept {
+  if (s == "openai")
+    return Provider::openai;
+  if (s == "anthropic")
+    return Provider::anthropic;
+  if (s == "gemini")
+    return Provider::openai;
+  if (s == "mistral")
+    return Provider::mistral;
+  return Provider::unknown;
+}
+
+/// Returns the provider from a name (throw if not found).
+[[nodiscard]] inline std::string_view provider_to_string(Provider p) noexcept {
+  switch (p) {
+  case Provider::openai:
+    return "openai";
+  case Provider::anthropic:
+    return "anthropic";
+  case Provider::gemini:
+    return "gemini";
+  case Provider::mistral:
+    return "mistral";
+  default:
+    return "unknown";
+  }
+}
 
 /// Per-model metadata for curated model lists.
 struct ModelInfo {

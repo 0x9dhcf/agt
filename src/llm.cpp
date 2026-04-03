@@ -1,4 +1,3 @@
-#include "http.hpp"
 #include "llm_anthropic.hpp"
 #include "llm_gemini.hpp"
 #include "llm_mistral.hpp"
@@ -22,7 +21,7 @@ static nlohmann::json_schema::json_validator& output_validator() {
   return v;
 }
 
-static const char* provider_environment_key(Provider p) noexcept {
+static std::string_view provider_environment_key(Provider p) noexcept {
   switch (p) {
   case agt::Provider::openai:
     return "OPENAI_API_KEY";
@@ -32,49 +31,51 @@ static const char* provider_environment_key(Provider p) noexcept {
     return "GEMINI_API_KEY";
   case agt::Provider::mistral:
     return "MISTRAL_API_KEY";
+  case agt::Provider::unknown:
+    return "UNKNOWN_API_KEY";
   }
-  return "unknown";
+  return "UNKNOWN_API_KEY";
 }
 
-const char* provider_to_string(Provider p) noexcept {
-  switch (p) {
-  case Provider::openai:
-    return "openai";
-  case Provider::anthropic:
-    return "anthropic";
-  case Provider::gemini:
-    return "gemini";
-  case Provider::mistral:
-    return "mistral";
-  }
-  return "unknown";
-}
+// const char* provider_to_string(Provider p) noexcept {
+//   switch (p) {
+//   case Provider::openai:
+//     return "openai";
+//   case Provider::anthropic:
+//     return "anthropic";
+//   case Provider::gemini:
+//     return "gemini";
+//   case Provider::mistral:
+//     return "mistral";
+//   }
+//   return "unknown";
+// }
 
-Provider provider_from_string(const std::string& s) {
-  if ("openai" == s)
-    return Provider::openai;
-  if ("anthropic" == s)
-    return Provider::anthropic;
-  if ("gemini" == s)
-    return Provider::gemini;
-  if ("mistral" == s)
-    return Provider::mistral;
-  throw std::runtime_error("unknown provider " + s);
-}
+// Provider provider_from_string(const std::string& s) {
+//   if ("openai" == s)
+//     return Provider::openai;
+//   if ("anthropic" == s)
+//     return Provider::anthropic;
+//   if ("gemini" == s)
+//     return Provider::gemini;
+//   if ("mistral" == s)
+//     return Provider::mistral;
+//   throw std::runtime_error("unknown provider " + s);
+// }
 
 std::vector<ModelInfo> curated_models(Provider p) {
   switch (p) {
   case Provider::openai:
-    return {{"gpt-5-nano"}, {"gpt-5-mini"}, {"gpt-5"}, {"gpt-5.1"}, {"gpt-5.2"},
-            {"o3", true}, {"o4-mini", true}};
+    return {{"gpt-5-nano"}, {"gpt-5-mini"}, {"gpt-5"},        {"gpt-5.1"},
+            {"gpt-5.2"},    {"o3", true},   {"o4-mini", true}};
   case Provider::anthropic:
-    return {{"claude-haiku-4-5-20251001"},
-            {"claude-sonnet-4-6", true},
-            {"claude-opus-4-6", true}};
+    return {{"claude-haiku-4-5-20251001"}, {"claude-sonnet-4-6", true}, {"claude-opus-4-6", true}};
   case Provider::gemini:
     return {{"gemini-2.5-flash", true}, {"gemini-2.5-pro", true}};
   case Provider::mistral:
     return {{"mistral-small-latest"}, {"mistral-medium-latest"}, {"mistral-large-latest"}};
+  case Provider::unknown:
+    return {};
   }
   return {};
 }
@@ -89,9 +90,9 @@ bool model_supports_thinking(Provider p, const std::string& model) {
 std::unordered_map<agt::Provider, ProviderConfig> load_providers_from_env() {
   std::unordered_map<agt::Provider, ProviderConfig> env;
   for (auto p : agt::providers) {
-    auto* env_key = std::getenv(agt::provider_environment_key(p));
+    auto* env_key = std::getenv(agt::provider_environment_key(p).data());
     if (env_key)
-      env[p] = {.key = env_key, .models = curated_models(p)};
+      env[p] = ProviderConfig{.key = env_key, .models = curated_models(p)};
   }
   return env;
 }
@@ -116,6 +117,8 @@ Llm::Llm(Provider p, const std::string& model, const std::string& key) {
   case Provider::mistral:
     llm_ = std::make_unique<llm_mistral>(model, key, thinking);
     break;
+  case Provider::unknown:
+    throw std::runtime_error("Unknown provider");
   }
 }
 

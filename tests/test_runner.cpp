@@ -15,8 +15,6 @@ Json Llm::complete(const Json &) { return {}; }
 Json Llm::complete(const Json &, on_token_cb) { return {}; }
 
 // Provider utility stubs (declared in llm.hpp, defined in llm.cpp)
-const char *provider_to_string(Provider) noexcept { return "stub"; }
-Provider provider_from_string(const std::string &) { return Provider::openai; }
 std::vector<ModelInfo> curated_models(Provider) { return {}; }
 bool model_supports_thinking(Provider, const std::string &) { return false; }
 } // namespace agt
