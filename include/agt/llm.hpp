@@ -23,20 +23,7 @@ inline constexpr std::array providers = {Provider::openai, Provider::anthropic, 
 /// Returns the provider from a name (throw if not found).
 // Provider provider_from_string(const std::string& string);
 
-/// Returns the provider name as a C string (e.g. "openai").
-[[nodiscard]] inline Provider provider_from_string(std::string_view s) noexcept {
-  if (s == "openai")
-    return Provider::openai;
-  if (s == "anthropic")
-    return Provider::anthropic;
-  if (s == "gemini")
-    return Provider::openai;
-  if (s == "mistral")
-    return Provider::mistral;
-  return Provider::unknown;
-}
-
-/// Returns the provider from a name (throw if not found).
+/// Returns the provider name as a string (e.g. "openai").
 [[nodiscard]] inline std::string_view provider_to_string(Provider p) noexcept {
   switch (p) {
   case Provider::openai:
@@ -50,6 +37,19 @@ inline constexpr std::array providers = {Provider::openai, Provider::anthropic, 
   default:
     return "unknown";
   }
+}
+
+/// Returns the provider from a name (throws if not found).
+[[nodiscard]] inline Provider provider_from_string(std::string_view s) {
+  if (s == "openai")
+    return Provider::openai;
+  if (s == "anthropic")
+    return Provider::anthropic;
+  if (s == "gemini")
+    return Provider::gemini;
+  if (s == "mistral")
+    return Provider::mistral;
+  throw std::runtime_error("unknown provider: " + std::string(s));
 }
 
 /// Per-model metadata for curated model lists.
