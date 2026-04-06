@@ -3,8 +3,8 @@
 #include <agt/runner.hpp>
 #include <agt/session.hpp>
 #include <agt/tool.hpp>
-#include <iostream>
 #include <memory>
+#include <print>
 #include <string>
 
 static agt::Provider parse_provider(const std::string &name) {
@@ -14,9 +14,9 @@ static agt::Provider parse_provider(const std::string &name) {
   throw std::runtime_error("unknown provider: " + name);
 }
 
-static void on_run_start() { std::cout << "Run starts\n"; }
+static void on_run_start() { std::println("Run starts"); }
 
-static void on_run_stop() { std::cout << "Run stops\n"; }
+static void on_run_stop() { std::println("Run stops"); }
 
 static const char *default_model(agt::Provider p) {
   switch (p) {
@@ -70,8 +70,8 @@ public:
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    std::cerr << "usage: " << argv[0] << " <provider> <api_key>\n"
-              << "  provider: openai | anthropic | gemini\n";
+    std::println(stderr, "usage: {} <provider> <api_key>", argv[0]);
+    std::println(stderr, "  provider: openai | anthropic | gemini");
     return 1;
   }
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
   try {
     p = parse_provider(argv[1]);
   } catch (const std::exception &e) {
-    std::cerr << e.what() << "\n";
+    std::println(stderr, "{}", e.what());
     return 1;
   }
 
@@ -102,18 +102,18 @@ int main(int argc, char **argv) {
 
   try {
     std::string q1 = "What's the weather like in Paris?";
-    std::cout << "query 1: " << q1 << "\n";
+    std::println("query 1: {}", q1);
     auto r1 = runner.run(llm, a, q1, {.max_turns = 10},
                          {.on_start = on_run_start, .on_stop = on_run_stop});
-    std::cout << "agent:   " << r1.content << "\n\n";
+    std::println("agent:   {}\n", r1.content);
 
     std::string q2 = "What about London? And what time is it?";
-    std::cout << "query 2: " << q2 << "\n";
+    std::println("query 2: {}", q2);
     auto r2 = runner.run(llm, a, q2, {.max_turns = 10},
                          {.on_start = on_run_start, .on_stop = on_run_stop});
-    std::cout << "agent:   " << r2.content << "\n";
+    std::println("agent:   {}", r2.content);
   } catch (const agt::LlmError &e) {
-    std::cerr << "llm error: " << e.what() << "\n";
+    std::println(stderr, "llm error: {}", e.what());
     return 1;
   }
 

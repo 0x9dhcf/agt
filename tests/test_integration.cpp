@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 #include <agt/llm.hpp>
 #include <cstdlib>
-#include <iostream>
+#include <print>
 #include <string>
 
 using json = agt::Json;
@@ -28,7 +28,7 @@ TEST_CASE("simple completion across all providers and models") {
 
     for (const auto &info : agt::curated_models(p)) {
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " ... " << std::flush;
+        std::print("  {}/{} ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
         json req = {{"messages", json::array({{{"role", "user"}, {"content", "Reply with exactly: hello"}}})}};
@@ -39,7 +39,7 @@ TEST_CASE("simple completion across all providers and models") {
         CHECK(res["usage"]["input_tokens"].get<int>() > 0);
         CHECK(res["usage"]["output_tokens"].get<int>() > 0);
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }
@@ -55,7 +55,7 @@ TEST_CASE("streaming completion across all providers and models") {
 
     for (const auto &info : agt::curated_models(p)) {
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " stream ... " << std::flush;
+        std::print("  {}/{} stream ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
         json req = {{"messages", json::array({{{"role", "user"}, {"content", "Reply with exactly: hello"}}})}};
@@ -71,7 +71,7 @@ TEST_CASE("streaming completion across all providers and models") {
         CHECK(res["usage"]["output_tokens"].get<int>() > 0);
         CHECK(streamed == res["content"].get<std::string>());
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }
@@ -95,7 +95,7 @@ TEST_CASE("tool calling round-trip across all providers and models") {
 
     for (const auto &info : agt::curated_models(p)) {
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " tool ... " << std::flush;
+        std::print("  {}/{} tool ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
 
@@ -130,7 +130,7 @@ TEST_CASE("tool calling round-trip across all providers and models") {
         CHECK(res2["stop_reason"] == "end");
         CHECK(res2["content"].is_string());
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }
@@ -154,7 +154,7 @@ TEST_CASE("streaming tool calling across all providers and models") {
 
     for (const auto &info : agt::curated_models(p)) {
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " stream-tool ... " << std::flush;
+        std::print("  {}/{} stream-tool ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
 
@@ -173,7 +173,7 @@ TEST_CASE("streaming tool calling across all providers and models") {
         CHECK(res["calls"][0].contains("name"));
         CHECK(res["calls"][0].contains("input"));
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }
@@ -201,7 +201,7 @@ TEST_CASE("multi-turn: follow-up after tool use does not reject null content") {
     const auto &first = models[0];
 
     SUBCASE(first.id.c_str()) {
-      std::cout << "  " << agt::provider_to_string(p) << "/" << first.id << " multi-turn ... " << std::flush;
+      std::print("  {}/{} multi-turn ... ", agt::provider_to_string(p), first.id);
 
       agt::Llm llm(p, first.id, key);
 
@@ -233,7 +233,7 @@ TEST_CASE("multi-turn: follow-up after tool use does not reject null content") {
 
       CHECK((res3["stop_reason"] == "end" || res3["stop_reason"] == "tool_use"));
 
-      std::cout << "ok\n";
+      std::println("ok");
     }
   }
 }
@@ -251,7 +251,7 @@ TEST_CASE("thinking effort accepted by models that support it") {
         continue;
 
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " thinking ... " << std::flush;
+        std::print("  {}/{} thinking ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
         json req = {{"messages", json::array({{{"role", "user"}, {"content", "Reply with exactly: hello"}}})},
@@ -261,7 +261,7 @@ TEST_CASE("thinking effort accepted by models that support it") {
         CHECK(res["stop_reason"] == "end");
         CHECK(res["content"].is_string());
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }
@@ -278,7 +278,7 @@ TEST_CASE("thinking effort silently ignored by models that do not support it") {
         continue;
 
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " no-thinking ... " << std::flush;
+        std::print("  {}/{} no-thinking ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
         json req = {{"messages", json::array({{{"role", "user"}, {"content", "Reply with exactly: hello"}}})},
@@ -289,7 +289,7 @@ TEST_CASE("thinking effort silently ignored by models that do not support it") {
         CHECK(res["stop_reason"] == "end");
         CHECK(res["content"].is_string());
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }
@@ -313,7 +313,7 @@ TEST_CASE("all responses conform to canonical output schema") {
 
     for (const auto &info : agt::curated_models(p)) {
       SUBCASE(info.id.c_str()) {
-        std::cout << "  " << agt::provider_to_string(p) << "/" << info.id << " schema ... " << std::flush;
+        std::print("  {}/{} schema ... ", agt::provider_to_string(p), info.id);
 
         agt::Llm llm(p, info.id, key);
 
@@ -343,7 +343,7 @@ TEST_CASE("all responses conform to canonical output schema") {
           }
         }
 
-        std::cout << "ok\n";
+        std::println("ok");
       }
     }
   }

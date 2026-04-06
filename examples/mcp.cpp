@@ -2,7 +2,7 @@
 #include <agt/llm.hpp>
 #include <agt/mcp.hpp>
 #include <agt/runner.hpp>
-#include <iostream>
+#include <print>
 #include <string>
 
 static agt::Provider parse_provider(const std::string &name) {
@@ -28,8 +28,8 @@ static const char *default_model(agt::Provider p) {
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    std::cerr << "usage: " << argv[0] << " <provider> <api_key>\n"
-              << "  provider: openai | anthropic | gemini\n";
+    std::println(stderr, "usage: {} <provider> <api_key>", argv[0]);
+    std::println(stderr, "  provider: openai | anthropic | gemini");
     return 1;
   }
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
   try {
     p = parse_provider(argv[1]);
   } catch (const std::exception &e) {
-    std::cerr << e.what() << "\n";
+    std::println(stderr, "{}", e.what());
     return 1;
   }
 
@@ -60,26 +60,26 @@ int main(int argc, char **argv) {
   agt::Runner runner;
 
   std::string query = "What's the weather like in Los Angeles?";
-  std::cout << "query: " << query << "\n\n";
+  std::println("query: {}\n", query);
 
   try {
     auto res = runner.run(llm, a, query, {.max_turns = 10});
 
-    std::cout << "--- messages ---\n" << res.messages.dump(2) << "\n\n";
+    std::println("--- messages ---\n{}\n", res.messages.dump(2));
 
     switch (res.status) {
     case agt::Response::ok:
-      std::cout << "agent: " << res.content << "\n";
+      std::println("agent: {}", res.content);
       break;
     case agt::Response::error:
-      std::cerr << "error: " << res.content << "\n";
+      std::println(stderr, "error: {}", res.content);
       return 1;
     case agt::Response::cancelled:
-      std::cerr << "cancelled: " << res.content << "\n";
+      std::println(stderr, "cancelled: {}", res.content);
       return 1;
     }
   } catch (const std::exception &e) {
-    std::cerr << "error: " << e.what() << "\n";
+    std::println(stderr, "error: {}", e.what());
     return 1;
   }
 

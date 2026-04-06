@@ -1,23 +1,23 @@
 #include <agt/llm.hpp>
-#include <iostream>
+#include <print>
 
 int main() {
   auto env = agt::load_providers_from_env();
 
   for (auto p : agt::providers) {
-    std::cout << agt::provider_to_string(p) << ":\n";
+    std::println("{}:", agt::provider_to_string(p));
 
     auto it = env.find(p);
     if (it == env.end()) {
-      std::cout << "  no API key set\n";
+      std::println("  no API key set");
       continue;
     }
 
     try {
       for (const auto &m : agt::Llm::models(p, it->second.key))
-        std::cout << "  " << m << "\n";
+        std::println("  {}", m);
     } catch (const agt::LlmError &e) {
-      std::cerr << "  error: " << e.what() << "\n";
+      std::println(stderr, "  error: {}", e.what());
     }
   }
 

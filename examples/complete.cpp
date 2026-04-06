@@ -1,5 +1,6 @@
 #include <agt/llm.hpp>
 #include <iostream>
+#include <print>
 #include <string>
 
 static agt::Provider parse_provider(const std::string &name) {
@@ -25,8 +26,8 @@ static const char *default_model(agt::Provider p) {
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    std::cerr << "usage: " << argv[0] << " <provider> <api_key>\n"
-              << "  provider: openai | anthropic | gemini\n";
+    std::println(stderr, "usage: {} <provider> <api_key>", argv[0]);
+    std::println(stderr, "  provider: openai | anthropic | gemini");
     return 1;
   }
 
@@ -34,7 +35,7 @@ int main(int argc, char **argv) {
   try {
     p = parse_provider(argv[1]);
   } catch (const std::exception &e) {
-    std::cerr << e.what() << "\n";
+    std::println(stderr, "{}", e.what());
     return 1;
   }
 
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
                    {"messages", agt::Json::array()}};
 
   std::string line;
-  std::cout << "[" << argv[1] << "] > " << std::flush;
+  std::print("[{}] > ", argv[1]);
 
   while (std::getline(std::cin, line)) {
     req["messages"].push_back({{"role", "user"}, {"content", line}});
@@ -53,15 +54,15 @@ int main(int argc, char **argv) {
 
       auto content = res.value("content", "");
       if (!content.empty())
-        std::cout << content << "\n\n";
+        std::println("{}\n", content);
 
       req["messages"].push_back({{"role", "assistant"}, {"content", content}});
     } catch (const agt::LlmError &e) {
-      std::cerr << "error: " << e.what() << "\n";
+      std::println(stderr, "error: {}", e.what());
       return 1;
     }
 
-    std::cout << "[" << argv[1] << "] > " << std::flush;
+    std::print("[{}] > ", argv[1]);
   }
 
   return 0;
