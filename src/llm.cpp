@@ -71,7 +71,7 @@ std::vector<ModelInfo> curated_models(Provider p) {
   case Provider::anthropic:
     return {{"claude-haiku-4-5-20251001"}, {"claude-sonnet-4-6", true}, {"claude-opus-4-6", true}};
   case Provider::gemini:
-    return {{"gemini-2.5-flash", true}, {"gemini-2.5-pro", true}};
+    return {{"gemini-2.5-flash"}, {"gemini-2.5-pro"}};
   case Provider::mistral:
     return {{"mistral-small-latest"}, {"mistral-medium-latest"}, {"mistral-large-latest"}};
   case Provider::unknown:

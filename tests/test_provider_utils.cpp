@@ -68,7 +68,7 @@ TEST_CASE("model_supports_thinking for known models") {
   CHECK(agt::model_supports_thinking(agt::Provider::openai, "o4-mini"));
   CHECK_FALSE(agt::model_supports_thinking(agt::Provider::openai, "gpt-5"));
   CHECK(agt::model_supports_thinking(agt::Provider::anthropic, "claude-sonnet-4-6"));
-  CHECK(agt::model_supports_thinking(agt::Provider::gemini, "gemini-2.5-flash"));
+  CHECK_FALSE(agt::model_supports_thinking(agt::Provider::gemini, "gemini-2.5-flash"));
   CHECK_FALSE(agt::model_supports_thinking(agt::Provider::mistral, "mistral-large-latest"));
 }
 
