@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
-project(agt VERSION 0.2.1 LANGUAGES CXX)
+project(agt VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -39,6 +39,13 @@ CPMAddPackage(
 find_package(CURL REQUIRED)
 find_package(SQLite3 REQUIRED)
 
+# --- Generated version header ---
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/agt/version.hpp
+  @ONLY
+)
+
 # --- Sources ---
 file(GLOB AGT_SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
@@ -70,8 +77,16 @@ foreach(_type STATIC SHARED)
   add_library(${_target} ${_type} ${AGT_SOURCES})
   set_target_properties(${_target} PROPERTIES OUTPUT_NAME agt)
 
+  if(_type STREQUAL "SHARED")
+    set_target_properties(${_target} PROPERTIES
+      VERSION   ${PROJECT_VERSION}
+      SOVERSION ${PROJECT_VERSION_MAJOR}
+    )
+  endif()
+
   target_include_directories(${_target}
     PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
   )
@@ -119,6 +134,8 @@ install(TARGETS agt_static agt_shared
 )
 
 install(DIRECTORY include/agt DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/agt/version.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agt)
 
 install(EXPORT agtTargets
   NAMESPACE agt::
