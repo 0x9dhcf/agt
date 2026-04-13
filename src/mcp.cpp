@@ -124,6 +124,10 @@ struct McpServerImpl {
     struct curl_slist *headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "Accept: application/json, text/event-stream");
+    for (const auto &[k, v] : config.headers) {
+      auto line = k + ": " + v;
+      headers = curl_slist_append(headers, line.c_str());
+    }
 
     curl_easy_setopt(curl, CURLOPT_URL, config.command.c_str());
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
@@ -302,7 +306,16 @@ struct McpServerImpl {
 // mcp_tool::execute (needs impl to be complete)
 // ---------------------------------------------------------------------------
 
-Json mcp_tool::execute(const Json &input, void *) { return impl_.call_tool(name_, input); }
+Json mcp_tool::execute(const Json &input, void *) {
+  // Surface failures as a tool result so the agent loop keeps running and
+  // the model can decide how to recover, rather than letting the exception
+  // tear down the runner.
+  try {
+    return impl_.call_tool(name_, input);
+  } catch (const std::exception &e) {
+    return Json{{"error", e.what()}};
+  }
+}
 
 // ---------------------------------------------------------------------------
 // mcp_server public interface

@@ -3,6 +3,7 @@
 #include <agt/tool.hpp>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace agt {
@@ -14,6 +15,9 @@ struct mcp_config {
   std::string name;
   std::string command;           ///< stdio: executable path, http: URL.
   std::vector<std::string> args; ///< Command-line args (stdio only).
+  /// Extra HTTP headers sent on every request (http transport only).
+  /// Typically used for `Authorization: Bearer <token>` or `x-api-key: ...`.
+  std::vector<std::pair<std::string, std::string>> headers;
 };
 
 struct McpServerImpl;
