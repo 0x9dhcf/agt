@@ -1,6 +1,7 @@
 #include <agt/mcp.hpp>
 #include <cstdio>
 #include <curl/curl.h>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <signal.h>
 #include <stdexcept>
@@ -19,14 +20,14 @@ namespace agt {
 // ---------------------------------------------------------------------------
 
 class mcp_tool : public Tool {
-  McpServerImpl &impl_;
+  McpServerImpl *impl_;
   std::string name_;
   std::string description_;
   Json parameters_;
 
 public:
   mcp_tool(McpServerImpl &impl, std::string name, std::string description, Json parameters)
-      : impl_(impl), name_(std::move(name)),
+      : impl_(&impl), name_(std::move(name)),
         description_(std::move(description)), parameters_(std::move(parameters)) {}
 
   const char *name() const noexcept override { return name_.c_str(); }
@@ -64,6 +65,11 @@ struct McpServerImpl {
 
   // http transport
   CURL *curl = nullptr;
+
+  // Serializes JSON-RPC transactions: the runner fans tool calls out across
+  // threads, but a single CURL easy handle (and the stdio fds + next_id) must
+  // only be touched by one thread at a time.
+  std::mutex mu;
 
   explicit McpServerImpl(const mcp_config &cfg) : config(cfg) {}
   ~McpServerImpl() noexcept { close(); }
@@ -170,6 +176,7 @@ struct McpServerImpl {
   // --- Transport-agnostic ---
 
   void notify(const std::string &method) {
+    std::lock_guard<std::mutex> lock(mu);
     auto msg = jsonrpc_notification(method);
     if (config.transport == McpTransport::stdio)
       send_stdio(msg);
@@ -178,6 +185,7 @@ struct McpServerImpl {
   }
 
   Json call(const std::string &method, Json params = Json::object()) {
+    std::lock_guard<std::mutex> lock(mu);
     auto req = jsonrpc_request(method, std::move(params));
 
     Json raw;
@@ -311,7 +319,7 @@ Json mcp_tool::execute(const Json &input, void *) {
   // the model can decide how to recover, rather than letting the exception
   // tear down the runner.
   try {
-    return impl_.call_tool(name_, input);
+    return impl_->call_tool(name_, input);
   } catch (const std::exception &e) {
     return Json{{"error", e.what()}};
   }
