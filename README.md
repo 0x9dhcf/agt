@@ -19,6 +19,69 @@ It is intentionally minimal: the API is straightforward, the loop is easy to
 follow, and it fits naturally into any C++ project that wants to add LLM-powered
 agent capabilities without pulling in a large framework.
 
+## Design
+
+agt is built around a single contract: a **canonical request/response schema**
+that all providers translate to and from. Every field a caller passes into
+`Llm::complete()` has a defined, validated shape; each backend
+(`llm_anthropic`, `llm_openai`, `llm_gemini`, `llm_mistral`) is responsible
+for translating the canonical request into its provider-native form and
+translating the response back. Callers never see provider-specific JSON.
+
+This contract is what makes the rest of the library work uniformly:
+
+- The `Runner` agentic loop operates on the canonical model only — it knows
+  how to validate tool inputs, invoke `agt::Tool::execute()`, fire lifecycle
+  hooks, accumulate token usage, and persist sessions, regardless of which
+  provider sits behind the `Llm`.
+- Switching providers is a one-line change at the call site.
+- Sessions are portable across providers: the canonical message history
+  recorded under Anthropic can be replayed against Gemini.
+
+### Non-goals: provider-native server-side tools
+
+agt deliberately does **not** expose provider-native server-side tools such
+as Anthropic's `web_search_20250305`, Gemini's `google_search`, OpenAI's
+`web_search_preview` / `code_interpreter` / `file_search`, or Mistral's
+Agents-API connectors.
+
+These tools look superficially similar across providers ("the model can
+search the web"), but they break the canonical contract in ways that cannot
+be papered over without making the contract meaningless:
+
+- **Each provider's request shape is different** — a tool array entry on
+  Anthropic and Gemini, a top-level option on OpenAI's Chat Completions, a
+  separate endpoint entirely on Mistral. There is no single canonical field
+  that can represent the feature uniformly.
+- **Per-provider tunables don't generalize** — `max_uses` (Anthropic),
+  `search_context_size` (OpenAI), premium tiers (Mistral), result counts
+  (Gemini). Hiding these behind a portable knob either drops them or
+  invents a lowest-common-denominator that nobody actually wants.
+- **Server-side tool invocations have no canonical response shape** — the
+  `calls[]` field represents model→client tool calls. A web-search round
+  the model performed server-side has nowhere to land in the canonical
+  response, which means `Runner` cannot account for it, hooks cannot
+  observe it, and sessions cannot replay it faithfully.
+- **Endpoint coverage is uneven** — OpenAI's `web_search_preview` and
+  Mistral's connectors live on API endpoints (`/v1/responses`,
+  `/v1/agents`) that agt's backends do not target. Pretending to support
+  the feature there would mean either silent no-ops or runtime errors —
+  neither honest.
+- **Adding a raw passthrough field would corrode the canonical model** —
+  once the schema accepts un-translated, un-validated JSON whose meaning
+  depends on the active provider, every future provider-specific feature
+  arrives through the same hatch instead of being designed. The library
+  stops being canonical and starts being a thin pre-translator with
+  asterisks.
+
+The supported alternative is to implement what you need as a regular
+`agt::Tool` that runs locally. For web search, that is a tool whose
+`execute()` calls a search API (Brave, Tavily, Kagi, DuckDuckGo, an MCP
+server) and returns the results — provider-agnostic, observable through the
+normal hooks, persisted in sessions, and fully under your control. agt's
+`Tool` interface and `MCP` integration exist precisely to cover these
+cases without compromising the canonical core.
+
 ## Dependencies
 
 - C++23 compiler
