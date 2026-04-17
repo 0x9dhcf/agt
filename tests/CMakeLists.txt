@@ -10,8 +10,12 @@ add_executable(test_public
   test_session.cpp
   test_sqlite_session.cpp
   test_provider_utils.cpp
+  test_mcp.cpp
 )
 target_link_libraries(test_public PRIVATE agt_static doctest::doctest)
+target_compile_definitions(test_public PRIVATE
+  AGT_FAKE_MCP_STDIO="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/fake_mcp_stdio.py"
+)
 add_test(NAME test_public COMMAND test_public)
 
 # --- test_internals ---

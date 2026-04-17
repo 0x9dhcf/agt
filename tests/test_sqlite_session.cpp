@@ -211,6 +211,99 @@ TEST_CASE("multiple session IDs do not interfere") {
   CHECK(s2->messages().size() == 1);
 }
 
+TEST_CASE("unicode and nested JSON content round-trip") {
+  auto path = tmp_db();
+  db_cleanup cleanup{path};
+  auto s = agt::make_sqlite_session(path, "s1");
+
+  json nested = {{"list", json::array({1, 2, 3})},
+                 {"obj", {{"k", "日本語"}, {"emoji", "🌙✨"}}}};
+  s->append(json::array({
+      {{"role", "user"}, {"content", "naïve → café — Ω 🚀"}},
+      {{"role", "assistant"}, {"content", nested.dump()}},
+  }));
+
+  auto msgs = s->messages();
+  REQUIRE(msgs.size() == 2);
+  CHECK(msgs[0]["content"] == "naïve → café — Ω 🚀");
+  CHECK(json::parse(msgs[1]["content"].get<std::string>()) == nested);
+}
+
+TEST_CASE("large payload (~200KB) round-trips intact") {
+  auto path = tmp_db();
+  db_cleanup cleanup{path};
+  auto s = agt::make_sqlite_session(path, "s1");
+
+  std::string big(200 * 1024, 'x');
+  big[100] = 'Z';
+  big.back() = 'Q';
+  s->append(json::array({{{"role", "user"}, {"content", big}}}));
+
+  auto msgs = s->messages();
+  REQUIRE(msgs.size() == 1);
+  auto got = msgs[0]["content"].get<std::string>();
+  CHECK(got.size() == big.size());
+  CHECK(got[100] == 'Z');
+  CHECK(got.back() == 'Q');
+}
+
+TEST_CASE("two handles on same (path, session_id) see each other's writes") {
+  auto path = tmp_db();
+  db_cleanup cleanup{path};
+
+  auto s1 = agt::make_sqlite_session(path, "shared");
+  auto s2 = agt::make_sqlite_session(path, "shared");
+
+  s1->append(json::array({{{"role", "user"}, {"content", "from-1"}}}));
+  auto seen = s2->messages();
+  REQUIRE(seen.size() == 1);
+  CHECK(seen[0]["content"] == "from-1");
+
+  s2->append(json::array({{{"role", "assistant"}, {"content", "from-2"}}}));
+  auto seen_back = s1->messages();
+  REQUIRE(seen_back.size() == 2);
+  CHECK(seen_back[1]["content"] == "from-2");
+}
+
+TEST_CASE("replace then reopen preserves the replacement") {
+  auto path = tmp_db();
+  db_cleanup cleanup{path};
+
+  {
+    auto s = agt::make_sqlite_session(path, "s1");
+    s->append(json::array({{{"role", "user"}, {"content", "old-a"}},
+                            {{"role", "user"}, {"content", "old-b"}}}));
+    s->replace(json::array({{{"role", "user"}, {"content", "fresh"}}}));
+  }
+
+  auto s = agt::make_sqlite_session(path, "s1");
+  auto msgs = s->messages();
+  REQUIRE(msgs.size() == 1);
+  CHECK(msgs[0]["content"] == "fresh");
+}
+
+TEST_CASE("compact persists across reopen") {
+  auto path = tmp_db();
+  db_cleanup cleanup{path};
+
+  {
+    auto s = agt::make_sqlite_session(path, "s1");
+    s->append(json::array({
+        {{"role", "user"}, {"content", "a"}},
+        {{"role", "assistant"}, {"content", "b"}},
+        {{"role", "user"}, {"content", "c"}},
+        {{"role", "assistant"}, {"content", "d"}},
+    }));
+    s->compact(2);
+  }
+
+  auto s = agt::make_sqlite_session(path, "s1");
+  auto msgs = s->messages();
+  REQUIRE(msgs.size() == 2);
+  CHECK(msgs[0]["content"] == "c");
+  CHECK(msgs[1]["content"] == "d");
+}
+
 TEST_CASE("tool calls with call_id and calls round-trip correctly") {
   auto path = tmp_db();
   db_cleanup cleanup{path};
