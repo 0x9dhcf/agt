@@ -9,6 +9,7 @@ add_executable(test_public
   test_main.cpp
   test_session.cpp
   test_sqlite_session.cpp
+  test_pg_session.cpp
   test_provider_utils.cpp
   test_mcp.cpp
 )

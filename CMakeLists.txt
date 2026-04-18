@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
-project(agt VERSION 0.4.0 LANGUAGES CXX)
+project(agt VERSION 0.5.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,9 +35,21 @@ CPMAddPackage(
     "JSON_VALIDATOR_BUILD_EXAMPLES OFF"
 )
 
+# libpqxx — modern C++ Postgres client. BSD-3-Clause.
+CPMAddPackage(
+  NAME libpqxx
+  GITHUB_REPOSITORY jtv/libpqxx
+  GIT_TAG 7.10.0
+  OPTIONS
+    "BUILD_DOC OFF"
+    "BUILD_TEST OFF"
+    "SKIP_BUILD_TEST ON"
+)
+
 # --- System dependencies ---
 find_package(CURL REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(PostgreSQL REQUIRED)
 
 # --- Generated version header ---
 configure_file(
@@ -96,6 +108,7 @@ foreach(_type STATIC SHARED)
   target_link_libraries(${_target}
     PUBLIC  nlohmann_json::nlohmann_json
     PRIVATE nlohmann_json_schema_validator CURL::libcurl SQLite::SQLite3
+            libpqxx::pqxx
   )
 
   if(CMAKE_BUILD_TYPE STREQUAL "Release")

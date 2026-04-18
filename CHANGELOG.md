@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-18
+
+### Added
+- `make_pg_session(dsn, session_id)`: Postgres-backed conversation persistence alongside the existing `make_sqlite_session`. Same interface; pick the backend that fits your deployment. Runs libpqxx 7.10 under the hood; `find_package(PostgreSQL)` + `libpqxx-dev` on the build host.
+- `tests/test_pg_session.cpp`: 7 doctest cases mirroring the SqliteSession suite. Gated on `PG_TEST_DSN`.
+
 ## [0.4.0] - 2026-04-17
 
 ### Added
