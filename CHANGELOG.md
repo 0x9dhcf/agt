@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-17
+
 ### Added
 - `mcp_config::headers`: list of `(name, value)` pairs sent on every HTTP MCP request. Unblocks talking to authenticated remote MCP servers (e.g. GitHub's hosted `https://api.githubcopilot.com/mcp/`, which requires `Authorization: Bearer ...`).
+- Unit-test coverage for the runner loop, MCP client, and session edge cases.
 
 ### Fixed
 - MCP tool errors no longer abort the runner. `mcp_tool::execute` now catches exceptions thrown by the transport or server and returns them as `{"error": ...}` tool results, so the agent loop keeps running and the model can recover in-conversation.
+- JSON-RPC transactions over MCP stdio are now serialised per-connection, fixing a crash under parallel tool-call runs.
 
 ## [0.3.0] - 2026-04-11
 
