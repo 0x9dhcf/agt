@@ -1,10 +1,19 @@
 #include "llm_openai.hpp"
 
+#include <cstdlib>
+
 using json = nlohmann::json;
 
 namespace agt {
 
 std::string llm_openai::url() const {
+  // Test fixtures and OpenAI-compatible self-hosted endpoints (vLLM, Ollama's
+  // OpenAI shim, lite-llm-proxy) set AGT_OPENAI_BASE_URL to redirect. Value
+  // is taken verbatim — include the full path, e.g.
+  // "http://127.0.0.1:1234/v1/chat/completions".
+  if (const char *v = std::getenv("AGT_OPENAI_BASE_URL"); v && *v) {
+    return v;
+  }
   return "https://api.openai.com/v1/chat/completions";
 }
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-18
+
+### Added
+- `McpTransport::sse`: MCP over Server-Sent Events (2024-11-05 spec). Client opens a GET on the SSE URL; the server's first event carries the POST endpoint for JSON-RPC requests, and replies stream back through the same SSE connection matched by JSON-RPC id. Handles concurrent calls through the existing `mu` serialization; pending replies route through a condition-variable-backed map.
+- Auto-upgrade from `http` to `sse` when the configured URL's path ends in `/sse`. Keeps callers that hard-code `transport: "http"` against SSE-hosted MCP servers (e.g. Houston MCP) working without config changes.
+- `AGT_OPENAI_BASE_URL` env var: when set, overrides the hardcoded OpenAI chat-completions URL. Useful for pointing at OpenAI-compatible self-hosted endpoints (vLLM, Ollama, litellm-proxy) and for tests with no API keys.
+- Test fixtures `tests/fixtures/fake_mcp_http.py`, `tests/fixtures/fake_mcp_sse.py`, and `tests/fixtures/fake_openai_llm.py`: minimal HTTP-based fakes for the two new MCP transports and for the OpenAI LLM path. Each prints its ephemeral port on stdout so tests pick it up without shell juggling.
+- `tests/test_llm_fake.cpp`: exercises `agt::Llm::complete` end-to-end without real provider credentials via `AGT_OPENAI_BASE_URL`.
+
+### Changed
+- `McpTransport` enum gains an `sse` member. Callers that switched on it exhaustively (with `-Wswitch`) need an `sse` branch — `parse_transport` / `transport_name` on the downstream side updated accordingly.
+
 ## [0.5.0] - 2026-04-18
 
 ### Added
