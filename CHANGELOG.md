@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-04-18
+
+### Fixed
+- `McpServerImpl::sse_write_cb`: SSE frames produced by real servers (Houston MCP among them) end every line with CRLF. The previous implementation mapped every `\r` to `\n` instead of stripping it, which splintered every `\r\n\r\n` boundary into four newlines — the parser then saw the `event: endpoint` and `data: ...` lines as two separate frames and the POST-endpoint URL carried a stray trailing `\r` that libcurl rejected as malformed. Now normalise by erasing `\r`. The SSE test fixture emits CRLF as production servers do to keep this regression caught by tests.
+
 ## [0.6.0] - 2026-04-18
 
 ### Added

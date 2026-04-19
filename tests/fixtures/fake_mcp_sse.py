@@ -147,7 +147,10 @@ class Handler(BaseHTTPRequestHandler):
             q.put(("message", json.dumps(reply)))
 
     def _emit(self, event: str, data: str) -> None:
-        frame = f"event: {event}\ndata: {data}\n\n"
+        # Real SSE servers (Houston MCP among them) end every line with CRLF.
+        # Using CRLF here keeps the test aligned with production shape —
+        # catches regressions in the client's CR handling.
+        frame = f"event: {event}\r\ndata: {data}\r\n\r\n"
         self.wfile.write(frame.encode("utf-8"))
         self.wfile.flush()
 

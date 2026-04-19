@@ -1,4 +1,5 @@
 #include <agt/mcp.hpp>
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -250,10 +251,13 @@ struct McpServerImpl {
   static size_t sse_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata) {
     auto *self = static_cast<McpServerImpl *>(userdata);
     self->sse_buffer.append(static_cast<char *>(ptr), size * nmemb);
-    // SSE frames are separated by a blank line. Normalize CRLF first.
-    for (size_t i = 0; i < self->sse_buffer.size(); ++i) {
-      if (self->sse_buffer[i] == '\r') self->sse_buffer[i] = '\n';
-    }
+    // SSE uses CRLF line endings. Strip the CRs so the frame/boundary search
+    // below can key on plain `\n\n`; otherwise a raw `\r\n\r\n` would splinter
+    // into four newlines and we'd emit half-frames with trailing CRs inside
+    // the data field — a classic "endpoint has a stray \r on the end that
+    // breaks libcurl's URL parser" symptom.
+    self->sse_buffer.erase(std::remove(self->sse_buffer.begin(), self->sse_buffer.end(), '\r'),
+                           self->sse_buffer.end());
     size_t boundary;
     while ((boundary = self->sse_buffer.find("\n\n")) != std::string::npos) {
       std::string frame = self->sse_buffer.substr(0, boundary);
