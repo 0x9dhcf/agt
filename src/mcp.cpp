@@ -335,6 +335,7 @@ struct McpServerImpl {
       auto line = k + ": " + v;
       headers = curl_slist_append(headers, line.c_str());
     }
+    curl_easy_setopt(sse_curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(sse_curl, CURLOPT_URL, config.command.c_str());
     curl_easy_setopt(sse_curl, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(sse_curl, CURLOPT_HTTPHEADER, headers);

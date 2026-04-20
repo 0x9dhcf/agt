@@ -98,10 +98,12 @@ Http::Http() : curl_(curl_easy_init()) {
 Http::~Http() noexcept { curl_easy_cleanup(curl_); }
 
 Json Http::get(const std::string& url, const std::vector<std::string>& headers) {
+  std::lock_guard<std::mutex> lock(mu_);
   struct curl_slist* hlist = to_slist(headers);
   std::string response;
 
   curl_easy_reset(curl_);
+  curl_easy_setopt(curl_, CURLOPT_NOSIGNAL, 1L);
   curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hlist);
   curl_easy_setopt(curl_, CURLOPT_HTTPGET, 1L);
@@ -134,10 +136,12 @@ Json Http::get(const std::string& url, const std::vector<std::string>& headers) 
 
 Json Http::post(const std::string& url, const std::string& body,
                 const std::vector<std::string>& headers) {
+  std::lock_guard<std::mutex> lock(mu_);
   struct curl_slist* hlist = to_slist(headers);
   std::string response;
 
   curl_easy_reset(curl_);
+  curl_easy_setopt(curl_, CURLOPT_NOSIGNAL, 1L);
   curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hlist);
   curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, body.c_str());
@@ -170,10 +174,12 @@ Json Http::post(const std::string& url, const std::string& body,
 
 void Http::post_stream(const std::string& url, const std::string& body,
                        const std::vector<std::string>& headers, SseCallback on_event) {
+  std::lock_guard<std::mutex> lock(mu_);
   struct curl_slist* hlist = to_slist(headers);
   stream_context ctx{{}, {}, {}, std::move(on_event)};
 
   curl_easy_reset(curl_);
+  curl_easy_setopt(curl_, CURLOPT_NOSIGNAL, 1L);
   curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hlist);
   curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, body.c_str());

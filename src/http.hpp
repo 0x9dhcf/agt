@@ -3,6 +3,7 @@
 #include <agt/llm.hpp>
 #include <curl/curl.h>
 #include <functional>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -14,8 +15,14 @@ using SseCallback = std::function<void(const std::string& event, const std::stri
 
 /// Thin wrapper around libcurl for JSON GET/POST requests.
 /// Owns a single CURL handle, reused across calls via curl_easy_reset.
+/// Thread-safe: every exposed call serialises through `mu_` so callers may
+/// share one Http (and therefore one Llm) across threads without tearing
+/// libcurl's handle state. `CURLOPT_NOSIGNAL=1` on every perform neutralises
+/// libcurl's SIGALRM-based DNS timeout (which is process-global and unsafe
+/// under threading).
 class Http {
   CURL* curl_;
+  std::mutex mu_;
 
   // CURLOPT_WRITEFUNCTION callback: appends data to a std::string.
   static size_t write_cb(void* ptr, size_t size, size_t nmemb, void* userdata);

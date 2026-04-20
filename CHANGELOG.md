@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-04-20
+
+### Fixed
+- `agt::Http` now serialises access with an internal mutex. The class had always owned a single CURL handle and reused it via `curl_easy_reset`, which is fine for a single-threaded caller but SEGV-prone when multiple threads shared one `agt::Llm` (and therefore one `Http`). Callers that intentionally hold `agt::Llm` at process scope — Mission Control being the motivating case — now hit a serialised gate instead of tearing the handle state.
+- `CURLOPT_NOSIGNAL=1` is set on every `curl_easy_perform` path (Http plus the SSE reader in `McpServerImpl`). Libcurl's default DNS timeout uses `SIGALRM`, which is process-global and not safe under threading — this neutralises that race, which manifested as `SEGV in curl_strnequal` during concurrent LLM calls.
+
 ## [0.6.1] - 2026-04-18
 
 ### Fixed
