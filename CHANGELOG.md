@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-04-21
+
+### Fixed
+- `SqliteSession`: set `PRAGMA busy_timeout=5000` alongside `journal_mode=WAL`. Without it, concurrent writes to the shared `messages` table (e.g. three rapid-fire mission threads in Mission Control all opening their own session for the same SQLite file) surface `SQLITE_BUSY` as an uncaught `std::runtime_error` and take the process down. Waiting up to 5 seconds for the lock is the standard remedy and matches what Python MC's SQLAlchemy engine already does.
+
 ## [0.6.2] - 2026-04-20
 
 ### Fixed

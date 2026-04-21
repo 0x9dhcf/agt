@@ -29,6 +29,11 @@ SqliteSession::SqliteSession(const std::string& db_path, const std::string& sess
     throw std::runtime_error("sqlite_session: failed to open DB: " + err);
   }
   exec("PRAGMA journal_mode=WAL");
+  // Wait up to 5s on a lock instead of surfacing SQLITE_BUSY to the caller.
+  // Multiple processes / threads hitting the same file (Mission Control runs
+  // one SqliteSession per detached mission thread) would otherwise crash on
+  // the second concurrent write to the messages table.
+  exec("PRAGMA busy_timeout=5000");
   exec("CREATE TABLE IF NOT EXISTS messages ("
        "  session_id TEXT NOT NULL,"
        "  seq INTEGER PRIMARY KEY AUTOINCREMENT,"
