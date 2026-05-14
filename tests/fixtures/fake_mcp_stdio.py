@@ -24,6 +24,7 @@ def respond(msg_id, result=None, error=None):
 
 
 def main():
+    print("FAKE MCP STDIO READY", file=sys.stderr, flush=True)
     for line in sys.stdin:
         line = line.strip()
         if not line:

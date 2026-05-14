@@ -43,6 +43,10 @@ public:
   /// Returns the tools discovered during connect(). The returned shared_ptrs
   /// keep the tools alive even if this mcp_server is destroyed.
   std::vector<std::shared_ptr<Tool>> tools();
+  /// Snapshot of bytes captured from the server's stderr since connect().
+  /// Empty for non-stdio transports. Bounded (older bytes dropped when the
+  /// buffer fills) so it stays cheap to call.
+  std::string stderr_output() const;
 };
 
 } // namespace agt

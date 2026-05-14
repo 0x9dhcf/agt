@@ -69,6 +69,15 @@ struct McpServerImpl {
   int fd_in = -1;
   FILE *fp_out = nullptr;
 
+  // stdio stderr capture: a background thread drains the child's stderr into
+  // a bounded buffer so banners don't leak to the parent's TTY but real
+  // diagnostics are recoverable (via stderr_output() or in error messages).
+  int fd_err = -1;
+  std::thread stderr_thread;
+  mutable std::mutex stderr_mu;
+  std::string stderr_buf;
+  static constexpr size_t kStderrCap = 16 * 1024;
+
   // http transport
   CURL *curl = nullptr;
 
@@ -140,9 +149,36 @@ struct McpServerImpl {
         break;
       }
     }
-    if (line.empty())
+    if (line.empty()) {
+      auto err = stderr_snapshot();
+      if (!err.empty())
+        throw std::runtime_error("mcp: stdio read failed (server stderr: " + err + ")");
       throw std::runtime_error("mcp: stdio read failed");
+    }
     return Json::parse(line);
+  }
+
+  std::string stderr_snapshot() const {
+    std::lock_guard<std::mutex> lock(stderr_mu);
+    return stderr_buf;
+  }
+
+  void stderr_reader_loop(int fd) {
+    char buf[1024];
+    for (;;) {
+      auto n = ::read(fd, buf, sizeof(buf));
+      if (n <= 0) break;
+      std::lock_guard<std::mutex> lock(stderr_mu);
+      auto incoming = static_cast<size_t>(n);
+      if (stderr_buf.size() + incoming > kStderrCap) {
+        auto overflow = stderr_buf.size() + incoming - kStderrCap;
+        if (overflow >= stderr_buf.size())
+          stderr_buf.clear();
+        else
+          stderr_buf.erase(0, overflow);
+      }
+      stderr_buf.append(buf, incoming);
+    }
   }
 
   // --- HTTP ---
@@ -476,26 +512,30 @@ struct McpServerImpl {
   void connect_stdio() {
     int to_child[2];
     int from_child[2];
+    int err_child[2];
 
-    if (pipe(to_child) < 0 || pipe(from_child) < 0)
+    if (pipe(to_child) < 0 || pipe(from_child) < 0 || pipe(err_child) < 0)
       throw std::runtime_error("mcp: pipe failed");
 
     pid_t pid = fork();
     if (pid < 0) {
-      ::close(to_child[0]);
-      ::close(to_child[1]);
-      ::close(from_child[0]);
-      ::close(from_child[1]);
+      for (int fd : {to_child[0], to_child[1],
+                     from_child[0], from_child[1],
+                     err_child[0], err_child[1]})
+        ::close(fd);
       throw std::runtime_error("mcp: fork failed");
     }
 
     if (pid == 0) {
       ::close(to_child[1]);
       ::close(from_child[0]);
+      ::close(err_child[0]);
       dup2(to_child[0], STDIN_FILENO);
       dup2(from_child[1], STDOUT_FILENO);
+      dup2(err_child[1], STDERR_FILENO);
       ::close(to_child[0]);
       ::close(from_child[1]);
+      ::close(err_child[1]);
 
       std::vector<char *> argv;
       argv.push_back(const_cast<char *>(config.command.c_str()));
@@ -509,14 +549,19 @@ struct McpServerImpl {
 
     ::close(to_child[0]);
     ::close(from_child[1]);
+    ::close(err_child[1]);
 
     child_pid = pid;
     fd_in = to_child[1];
     fp_out = fdopen(from_child[0], "r");
     if (!fp_out) {
       ::close(from_child[0]);
+      ::close(err_child[0]);
       throw std::runtime_error("mcp: fdopen failed");
     }
+
+    fd_err = err_child[0];
+    stderr_thread = std::thread([this, fd = fd_err]() { stderr_reader_loop(fd); });
   }
 
   void connect_http() {
@@ -582,6 +627,15 @@ struct McpServerImpl {
         waitpid(child_pid, nullptr, 0);
         child_pid = -1;
       }
+      // Child gone → its write end of err_child is closed → reader loop
+      // hits EOF and returns. Join before closing our read end.
+      if (stderr_thread.joinable()) {
+        try { stderr_thread.join(); } catch (...) {}
+      }
+      if (fd_err >= 0) {
+        ::close(fd_err);
+        fd_err = -1;
+      }
     } else {
       if (config.transport == McpTransport::sse) {
         // Signal sse_loop to exit (xferinfo_cb returns 1), wake any pending
@@ -624,6 +678,8 @@ McpServer::McpServer(const mcp_config &config)
 McpServer::~McpServer() noexcept = default;
 
 void McpServer::connect() { impl_->connect(); }
+
+std::string McpServer::stderr_output() const { return impl_->stderr_snapshot(); }
 
 std::vector<std::shared_ptr<Tool>> McpServer::tools() {
   if (!impl_->owned_tools.empty()) {
