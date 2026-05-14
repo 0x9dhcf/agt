@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-05-14
+
+### Fixed
+- `McpServerImpl::connect_stdio`: stdio MCP servers used to inherit the
+  parent's stderr, so banners like `Knowledge Graph MCP Server running on
+  stdio` leaked into the host application's terminal at startup (visible
+  for any program embedding agt that talks to memory or other chatty
+  stdio servers). A third pipe is now installed and a background thread
+  drains the child's stderr into a bounded 16 KiB per-server buffer.
+  `recv_stdio` errors now include the captured stderr in their message,
+  so crashing or misconfigured stdio servers produce actionable
+  diagnostics instead of a generic `mcp: stdio read failed`.
+
+### Added
+- `McpServer::stderr_output()`: returns a snapshot of the bounded stderr
+  buffer captured from the stdio server since `connect()`. Empty for
+  non-stdio transports. Lets embedding apps surface server diagnostics
+  (e.g. as part of a `/mcp` listing) without parsing thrown messages.
+
 ## [0.6.3] - 2026-04-21
 
 ### Fixed
@@ -75,5 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependency fetches stabilized: pinned `nlohmann_json_VERSION` for the
   json-schema-validator build, and fixed the CPM URL used for json-schema-validator.
 
-[Unreleased]: https://github.com/0x9dhcf/agt/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/0x9dhcf/agt/compare/v0.6.4...HEAD
+[0.6.4]: https://github.com/0x9dhcf/agt/releases/tag/v0.6.4
 [0.3.0]: https://github.com/0x9dhcf/agt/releases/tag/v0.3.0
