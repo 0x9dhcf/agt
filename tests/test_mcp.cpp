@@ -157,6 +157,16 @@ TEST_CASE("tools() before connect returns empty") {
   CHECK(tools.empty());
 }
 
+TEST_CASE("stderr from server is captured, not leaked to parent tty") {
+  agt::McpServer srv(stdio_config());
+  srv.connect();
+  // fixture prints "FAKE MCP STDIO READY" to stderr before its read loop;
+  // verify it was captured into the server's buffer rather than written
+  // straight to the test runner's tty.
+  auto err = srv.stderr_output();
+  CHECK(err.find("FAKE MCP STDIO READY") != std::string::npos);
+}
+
 TEST_CASE("destroying server cleans up child process") {
   // Just ensure rapid construct/destruct doesn't leak or hang. If the child
   // process weren't reaped the test binary would eventually see zombies.
