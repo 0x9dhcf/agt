@@ -2,6 +2,19 @@
 
 namespace agt {
 
+namespace {
+// Network timeouts. Without these a stalled connection blocks curl_easy_perform
+// forever, freezing the caller's thread (the chatty UI hang).
+constexpr long kConnectTimeoutSecs = 15;  // cap the TCP/TLS dial
+constexpr long kRequestTimeoutSecs = 300; // hard ceiling for non-streaming calls
+
+// Streaming uses a stall guard instead of a hard ceiling: a legitimate response
+// may stream for minutes, so we only abort when throughput dies. Below
+// kStreamStallBytesPerSec for kStreamStallSecs => the stream is hung, give up.
+constexpr long kStreamStallBytesPerSec = 1;
+constexpr long kStreamStallSecs = 90;
+} // namespace
+
 size_t Http::write_cb(void* ptr, size_t size, size_t nmemb, void* userdata) {
   auto* buf = static_cast<std::string*>(userdata);
   buf->append(static_cast<char*>(ptr), size * nmemb);
@@ -104,6 +117,8 @@ Json Http::get(const std::string& url, const std::vector<std::string>& headers) 
 
   curl_easy_reset(curl_);
   curl_easy_setopt(curl_, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(curl_, CURLOPT_CONNECTTIMEOUT, kConnectTimeoutSecs);
+  curl_easy_setopt(curl_, CURLOPT_TIMEOUT, kRequestTimeoutSecs);
   curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hlist);
   curl_easy_setopt(curl_, CURLOPT_HTTPGET, 1L);
@@ -142,6 +157,8 @@ Json Http::post(const std::string& url, const std::string& body,
 
   curl_easy_reset(curl_);
   curl_easy_setopt(curl_, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(curl_, CURLOPT_CONNECTTIMEOUT, kConnectTimeoutSecs);
+  curl_easy_setopt(curl_, CURLOPT_TIMEOUT, kRequestTimeoutSecs);
   curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hlist);
   curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, body.c_str());
@@ -180,6 +197,9 @@ void Http::post_stream(const std::string& url, const std::string& body,
 
   curl_easy_reset(curl_);
   curl_easy_setopt(curl_, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(curl_, CURLOPT_CONNECTTIMEOUT, kConnectTimeoutSecs);
+  curl_easy_setopt(curl_, CURLOPT_LOW_SPEED_LIMIT, kStreamStallBytesPerSec);
+  curl_easy_setopt(curl_, CURLOPT_LOW_SPEED_TIME, kStreamStallSecs);
   curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hlist);
   curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, body.c_str());
