@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-05-29
+
+### Fixed
+- HTTP requests now enforce network timeouts, so a stalled connection no
+  longer blocks the calling thread forever (the intermittent "frozen UI"
+  hang in host applications). All requests get a 15s connect timeout;
+  non-streaming `get`/`post` get a 300s ceiling; streaming `post_stream`
+  uses a throughput stall guard (aborts only when the response drops below
+  1 byte/s for 90s, so a slow-but-live stream is never cut off). A tripped
+  timeout surfaces as a `network_error` instead of hanging.
+
 ## [0.6.4] - 2026-05-14
 
 ### Fixed
@@ -94,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependency fetches stabilized: pinned `nlohmann_json_VERSION` for the
   json-schema-validator build, and fixed the CPM URL used for json-schema-validator.
 
-[Unreleased]: https://github.com/0x9dhcf/agt/compare/v0.6.4...HEAD
+[Unreleased]: https://github.com/0x9dhcf/agt/compare/v0.6.5...HEAD
+[0.6.5]: https://github.com/0x9dhcf/agt/releases/tag/v0.6.5
 [0.6.4]: https://github.com/0x9dhcf/agt/releases/tag/v0.6.4
 [0.3.0]: https://github.com/0x9dhcf/agt/releases/tag/v0.3.0
